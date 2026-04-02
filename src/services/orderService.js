@@ -59,12 +59,14 @@ const getOrderById = async (id, requestingUser) => {
   return order;
 };
 
+const cartService = require('./cartService');
+
 const createOrder = async (orderData, requestingUser) => {
   // Force the userId to be the logged in user if not admin
   const userId = requestingUser.role === 'ADMIN' ? (orderData.userId || requestingUser.userId) : requestingUser.userId;
-  const { totalAmount, orderItems } = orderData;
+  const { totalAmount, orderItems, paymentMethod = 'COD' } = orderData;
   
-  // Create order and orderItems together in a transaction
+  // Create order, orderItems, and Payment together in a transaction
   return await prisma.$transaction(async (tx) => {
     // 1. Check stock for each product
     for (const item of orderItems) {
@@ -100,8 +102,18 @@ const createOrder = async (orderData, requestingUser) => {
         orderItems: true
       }
     });
+
+    // 3. Create the payment record
+    await tx.payment.create({
+      data: {
+        orderId: order.id,
+        amount: totalAmount,
+        method: paymentMethod,
+        status: 'PENDING'
+      }
+    });
     
-    // 3. Update stock for each product
+    // 4. Update stock for each product
     for (const item of orderItems) {
       await tx.product.update({
         where: { id: item.productId },
@@ -120,7 +132,17 @@ const createOrder = async (orderData, requestingUser) => {
             decrement: item.quantity
           }
         }
-      }).catch(() => {}); // Ignore if inventory record doesn't exist for simplicity
+      }).catch(() => {});
+    }
+
+    // 5. Clear the user's cart after successful order
+    // Since we are in a transaction AND we need to deleteMany across another model,
+    // we use the tx object directly for cart clearing too
+    const userCart = await tx.cart.findUnique({ where: { userId } });
+    if (userCart) {
+      await tx.cartItem.deleteMany({
+        where: { cartId: userCart.id }
+      });
     }
     
     return order;

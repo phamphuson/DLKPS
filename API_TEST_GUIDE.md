@@ -1,199 +1,147 @@
 # 🛒 E-commerce API v1 - Ultimate Test Guide
 
-This guide contains EVERY endpoint available in the system, organized by resource.
+This guide contains EVERY endpoint available in the system, organized by resource and business flow.
 
 ## 🌐 Base URL
 `http://localhost:3000/api/v1`
 
 ---
 
-## 🔐 Authentication & Authorization
+## 👨‍💻 Roles & Permissions (Realistic)
 
-### 1. Register (Public - User only)
-- **POST /auth/register**
-- **JSON Body:**
-```json
-{
-  "fullName": "Pham Son",
-  "email": "son_user@gmail.com",
-  "password": "password123"
-}
-```
-
-### 2. Login (Public - Get Token)
-- **POST /auth/login**
-- **JSON Body:**
-```json
-{
-  "email": "admin@gmail.com", 
-  "password": "123456"
-}
-```
-- **Action:** Copy `token` -> Use as **Bearer Token** in all other requests.
+| Role | Permissions |
+| :--- | :--- |
+| **GUEST** | Can only Register or Login. |
+| **USER** | View Categories/Products, Manage **OWN** Cart, Addresses, Orders & Reviews. |
+| **ADMIN** | Full access: Manage all Users, Products, Categories, Orders, Inventory, and Payments. |
 
 ---
 
-## 📂 Categories (CRUD)
-
-### Create Category (Admin Only)
-- **POST /categories**
-```json
-{
-  "name": "Laptops",
-  "description": "Gaming and office laptops"
-}
-```
-
-### Update Category (Admin Only)
-- **PUT /categories/:id**
-```json
-{
-  "description": "Premium Gaming and Ultrabooks"
-}
-```
-
-### Delete Category (Admin Only)
-- **DELETE /categories/:id**
-- **Rule:** Fails if products are linked to this category.
-
-### Get All / Get By ID
-- **GET /categories**
-- **GET /categories/:id**
+## 🔐 Authentication
+**1. Login:** `POST /auth/login` -> Copy `token`.
+**2. Header:** Use Header `Authorization: Bearer <TOKEN>` for all requests below.
 
 ---
 
-## 📱 Products (CRUD)
+## 📦 1. Shopping Flow (Categories & Products)
 
-### Create Product (Admin Only)
-- **POST /products**
-```json
-{
-  "name": "ASUS ROG Zephyrus G14",
-  "description": "High performance gaming laptop",
-  "price": 1599.99,
-  "stock": 10,
-  "categoryId": "PASTE_ID_HERE"
-}
-```
+### Get All Categories (Clean View)
+- **GET /categories** (Returns simple list without nested products)
 
-### Update Product (Admin Only)
-- **PUT /products/:id**
-```json
-{
-  "price": 1499.99,
-  "stock": 15
-}
-```
-
-### Delete Product (Admin Only)
-- **DELETE /products/:id**
+### Get All Products
+- **GET /products**
 
 ---
 
-## 🛒 Orders (Transactions)
+## 🛒 2. Cart System (Giỏ hàng)
 
-### Create Order (Checkout)
+### Add to Cart
+- **POST /cart**
+```json
+{
+  "productId": "PROD_ID_HERE",
+  "quantity": 2
+}
+```
+
+### View My Cart
+- **GET /cart** (Returns items with current prices and total)
+
+### Update Quantity / Remove
+- **PUT /cart/:cartItemId** (JSON: `{"quantity": 5}`)
+- **DELETE /cart/:cartItemId**
+
+---
+
+## 🏠 3. Address Management (Địa chỉ)
+
+### Add New Address
+- **POST /addresses**
+```json
+{
+  "addressLine": "123 Main St",
+  "city": "HCM City",
+  "district": "District 1",
+  "ward": "Ward 5"
+}
+```
+
+### View My Addresses
+- **GET /addresses**
+
+---
+
+## 💳 4. Order & Checkout Flow (Đặt hàng)
+
+### 🔄 The Process:
+1.  **Select Items:** Add to `Cart`.
+2.  **Checkout:** Call `POST /orders`.
+3.  **Automation:** 
+    -   Stock is checked and decremented.
+    -   A **Payment** record is auto-generated (`PENDING`).
+    -   Your **Cart** is automatically cleared.
+
+### Place Order
 - **POST /orders**
-- **Rule:** Atomic transaction. Decrements stock & inventory.
 ```json
 {
-  "userId": "PASTE_USER_ID_HERE",
-  "totalAmount": 1499.99,
+  "paymentMethod": "COD", 
   "orderItems": [
     {
-      "productId": "PASTE_PROD_ID_HERE",
+      "productId": "PROD_ID",
       "quantity": 1,
-      "price": 1499.99
+      "price": 1500
     }
   ]
 }
 ```
+*(Note: userId is taken automatically from your token)*
 
-### Update Order Status
-- **PUT /orders/:id/status**
+---
+
+## 💸 5. Payments (Thanh toán)
+
+### View Order Payment Info
+- **GET /payments/:orderId**
+
+### Update Payment Status (Admin Only)
+- **PUT /payments/:orderId/status**
 ```json
-{
-  "status": "DELIVERED"
-}
+{ "status": "COMPLETED" }
 ```
 
 ---
 
-## 🛖 Inventory (Admin Only)
+## ⭐ 6. Product Reviews (Đánh giá)
 
-### Update Inventory
-- **PUT /inventory/:id**
+### Add Review
+- **POST /products/:productId/reviews**
 ```json
 {
-  "quantity": 120,
-  "location": "Warehouse B - Shelf 5"
+  "rating": 5,
+  "comment": "Excellent quality laptop!"
 }
 ```
 
----
-
-## 👥 Users
-
-### Update User Profile
-- **PUT /users/:id**
-```json
-{
-  "fullName": "Pham Son Updated",
-  "password": "newpassword456"
-}
-```
-
-### Delete User
-- **DELETE /users/:id**
+### View Product Reviews
+- **GET /products/:productId/reviews**
 
 ---
 
-## 💬 Messaging (Private Chat)
-
-Messaging allows users to communicate privately.
-
-### 1. Send Message
-- **POST /messages**
-```json
-{
-  "to": "RECIPIENT_USER_ID",
-  "messageContent": {
-    "type": "text",
-    "text": "Hello, how are you?"
-  }
-}
-*vd*
-{
-  "to": "69ce96019a31f6896ffc9a7e",
-  "messageContent": {
-    "type": "file",
-    "text": "C:/Users/LENOVO/Downloads/tc2.side"
-  }
-}
-
-```
-*Note: For files, set `type` to "file" and `text` to the file path.*
-
-### 2. Get Conversation
-- **GET /messages/:userID**
-- **Purpose:** Get all messages between the current user and the specified user ID.
-
-### 3. Get Chat List (Inbox)
-- **GET /messages**
-- **Purpose:** Get the most recent message from every user you've had a conversation with.
+## 🛖 7. Inventory (Admin Only)
+- **PUT /inventory/:id** (Update warehouse stock/location)
 
 ---
 
-## 🛡️ Business Rules & Security (Quick Reference)
+## 👥 8. Users
+- **GET /users** (Admin Only - List all)
+- **GET /users/:id** (Self/Admin - Profile)
+
+---
+
+## 🛡️ Business Rules (Quick Reference)
 1. **Uniqueness:** Categories cannot have duplicate names.
 2. **Safety:** Cannot delete categories that still have products.
 3. **Stock:** Orders block if `quantity > stock`.
-4. **Automation:** Products auto-generate Inventory entry on create.
-5. **Prices:** Must be `> 0`.
-6. **Ownership (USER):** Users can only see/update/delete **THEIR OWN** Profile and Orders. Attempting to access others results in `403 Forbidden`.
-7. **Admins:** Have full access to all users, orders, inventory, and management endpoints.
-8. **User List:** Only Admins can call `GET /api/v1/users` to see everyone.
-
-## 🛠 Admin Credentials
-- **Email:** `admin@gmail.com`
-- **Password:** `123456`
+4. **Automation:** Orders auto-create Payment and auto-clear Cart.
+5. **Ownership:** Users only manage their **OWN** data.
