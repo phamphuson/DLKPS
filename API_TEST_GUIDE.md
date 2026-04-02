@@ -148,6 +148,42 @@ This guide contains EVERY endpoint available in the system, organized by resourc
 
 ---
 
+## 💬 Messaging (Private Chat)
+
+Messaging allows users to communicate privately.
+
+### 1. Send Message
+- **POST /messages**
+```json
+{
+  "to": "RECIPIENT_USER_ID",
+  "messageContent": {
+    "type": "text",
+    "text": "Hello, how are you?"
+  }
+}
+*vd*
+{
+  "to": "69ce96019a31f6896ffc9a7e",
+  "messageContent": {
+    "type": "file",
+    "text": "C:/Users/LENOVO/Downloads/tc2.side"
+  }
+}
+
+```
+*Note: For files, set `type` to "file" and `text` to the file path.*
+
+### 2. Get Conversation
+- **GET /messages/:userID**
+- **Purpose:** Get all messages between the current user and the specified user ID.
+
+### 3. Get Chat List (Inbox)
+- **GET /messages**
+- **Purpose:** Get the most recent message from every user you've had a conversation with.
+
+---
+
 ## 🛡️ Business Rules & Security (Quick Reference)
 1. **Uniqueness:** Categories cannot have duplicate names.
 2. **Safety:** Cannot delete categories that still have products.

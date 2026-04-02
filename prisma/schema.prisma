@@ -13,14 +13,33 @@ model User {
   fullName  String
   email     String   @unique
   password  String
-  role      String   @default("USER") // Simplified: could relate to Role model if needed
+  role      String   @default("USER")
   createdAt DateTime @default(now())
 
   // Relations
-  orders    Order[]
-  addresses Address[]
-  reviews   Review[]
-  cart      Cart?
+  orders           Order[]
+  addresses        Address[]
+  reviews          Review[]
+  cart             Cart?
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+}
+
+type MessageContent {
+  type String // file, text
+  text String // path or content
+}
+
+model Message {
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  fromId         String         @db.ObjectId
+  toId           String         @db.ObjectId
+  messageContent MessageContent
+  createdAt      DateTime       @default(now())
+
+  // Relations
+  from User @relation("SentMessages", fields: [fromId], references: [id])
+  to   User @relation("ReceivedMessages", fields: [toId], references: [id])
 }
 
 model Role {

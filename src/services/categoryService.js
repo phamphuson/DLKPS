@@ -1,32 +1,12 @@
 const prisma = require('../config/prisma');
 
 const getAllCategories = async () => {
-  return await prisma.category.findMany({
-    include: {
-      products: {
-        select: {
-          name: true,
-          price: true,
-          stock: true
-        }
-      }
-    }
-  });
+  return await prisma.category.findMany();
 };
 
 const getCategoryById = async (id) => {
   return await prisma.category.findUnique({
-    where: { id },
-    include: {
-      products: {
-        select: {
-          id: true,
-          name: true,
-          price: true,
-          stock: true
-        }
-      }
-    }
+    where: { id }
   });
 };
 

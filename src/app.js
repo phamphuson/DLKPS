@@ -5,6 +5,7 @@ const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
+const messageRoutes = require('./routes/messageRoutes');
 const authMiddleware = require('./middlewares/auth.middleware');
 
 const app = express();
@@ -19,6 +20,7 @@ app.use('/api/v1/products', authMiddleware, productRoutes);
 app.use('/api/v1/categories', authMiddleware, categoryRoutes);
 app.use('/api/v1/orders', authMiddleware, orderRoutes);
 app.use('/api/v1/inventory', authMiddleware, inventoryRoutes);
+app.use('/api/v1/messages', authMiddleware, messageRoutes);
 
 // Basic health check route
 app.get('/', (req, res) => {
